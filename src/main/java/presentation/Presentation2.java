@@ -1,27 +1,28 @@
 package presentation;
 
 import metier.IMetier;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.*;
 
-/**
- * Classe principale qui démarre l'application Spring
- * et récupère les beans définis par annotations (@Component, @Autowired, etc.)
- */
 @Configuration
-@ComponentScan(basePackages = {"dao", "metier"})  // Scan les bons packages
+@ComponentScan(basePackages = {"dao","metier","config"})
 public class Presentation2 {
+  public static void main(String[] args) {
+    AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
 
-    public static void main(String[] args) {
-        // Création du contexte Spring à partir de la configuration par annotations
-        ApplicationContext context = new AnnotationConfigApplicationContext(Presentation2.class);
+    // Choix 1 (profils) : décommenter un profil pour tester
+    ctx.getEnvironment().setActiveProfiles("dev");   // -> DaoImpl2 (150) => 300
+    // ctx.getEnvironment().setActiveProfiles("prod");  // -> DaoImpl  (100) => 200
+    // ctx.getEnvironment().setActiveProfiles("file");  // -> DaoFile  (180) => 360
+    // ctx.getEnvironment().setActiveProfiles("api");   // -> DaoApi   (220) => 440
 
-        // Récupération du bean de type IMetier depuis le conteneur
-        IMetier metier = context.getBean(IMetier.class);
+    // Choix 2 (propriété externe) : laisser les profils vides,
+    // PropertyDrivenConfig créera un bean "dao" selon app.properties
 
-        // Exécution de la méthode et affichage du résultat
-        System.out.println("Résultat = " + metier.calcul());
-    }
+    ctx.register(Presentation2.class);
+    ctx.refresh();
+
+    IMetier metier = ctx.getBean(IMetier.class);
+    System.out.println("Résultat = " + metier.calcul());
+    ctx.close();
+  }
 }
